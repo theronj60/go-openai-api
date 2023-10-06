@@ -2,10 +2,11 @@ package main
 
 import (
 	"log"
-	"net/http"
+	"os"
 
 	"github.com/theronj60/go-openai-api/internal/Controllers"
 
+	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
 	goenv "github.com/joho/godotenv"
 )
@@ -19,17 +20,18 @@ func main() {
 
 	router := gin.Default()
 
-	// router.LoadHTMLGlob("templates/*")
-	router.GET("/", func(c *gin.Context) {
-	// 	c.HTML(http.StatusOK, "index.html", gin.H{
-	// 		"title": "Index",
-	// 	})
-		c.String(200, "Success")
+	// Configure CORS middleware
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = false
+	config.AllowedOrigins = []string{os.Getenv("URL_ORIGIN")} // Allow only this origin or you can allow all origins with `config.AllowAllOrigins = true`
+	config.AllowedMethods = []string{"GET", "POST", "PUT", "DELETE"}
+	config.AllowedHeaders = []string{"Origin", "Content-Type", "Authorization"} // Adjust headers as necessary
 
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Welcome home",
-		})
-	})
+	router.Use(cors.New(config))
+
+
+	// router.LoadHTMLGlob("templates/*")
+	router.GET("/", Controllers.HomeHandler)
 	// router.GET("/about", func(c *gin.Context) {
 	// 	c.HTML(http.StatusOK, "about.html", gin.H{
 	// 		"title": "About",
@@ -38,10 +40,11 @@ func main() {
 
 	api := router.Group("/api")
 	{
-		api.POST("/financial-writer", Controllers.GetFinancialHandler)
+		api.POST("/financial-assistant", Controllers.GetFinancialHandler)
 		// api.POST("/financial-writer", Controllers.GetFinancialHandler)
 	}
+	router.Run(os.Getenv("PORT"))
 
-	http.ListenAndServe(":8885", router)
+	// http.ListenAndServe(":8885", router)
 }
 

@@ -3,6 +3,7 @@ module github.com/theronj60/go-openai-api
 go 1.20
 
 require (
+	github.com/gin-gonic/contrib v0.0.0-20221130124618-7e01895a63f2
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
 	github.com/sashabaranov/go-openai v1.15.3

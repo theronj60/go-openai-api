@@ -15,25 +15,29 @@ import (
 )
 
 type ChatPrompt struct {
-	Question string `form:"question"`
+	Question string `form:"question" binding:"required"`
 }
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Home Here"))
+func HomeHandler(c *gin.Context) {
+	c.String(200, "Success")
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Welcome home",
+	})
 }
 
 func GetFinancialHandler(c *gin.Context) {
 	var chatPrompt ChatPrompt
-
-	if c.ShouldBind(&chatPrompt) == nil {
-		log.Println(chatPrompt.Question)
+	// chatPrompt.Question = c.PostForm("question")
+	if err := c.Bind(&chatPrompt); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+	// if c.ShouldBindJSON(&chatPrompt) == nil {
+	// 	log.Println(chatPrompt.Question)
+	// }
 
-
-// }
-
-// func ask_chat(prompt string) string {
+	log.Println("question: " + chatPrompt.Question)
 	openai_key := os.Getenv("OPENAI_KEY")
 	client := openai.NewClient(openai_key)
 	ctx := context.Background()
@@ -42,8 +46,12 @@ func GetFinancialHandler(c *gin.Context) {
 		Model: openai.GPT3Dot5Turbo,
 		Messages: []openai.ChatCompletionMessage{
 			{
-				Role: "system",
+				Role:    "system",
 				Content: "You are a helpful financial advisor for native americans who answers questions about college and scholarships.",
+			},
+			{
+				Role:    "system",
+				Content: "Your priority is to help native americans.",
 			},
 			{
 				Role:    openai.ChatMessageRoleUser,
@@ -66,7 +74,10 @@ func GetFinancialHandler(c *gin.Context) {
 		response, err := stream.Recv()
 		if errors.Is(err, io.EOF) {
 			fmt.Println("\nStream finished")
-			c.String(200, "Success")
+			// c.String(200, "Success")
+			c.JSON(http.StatusOK, gin.H{
+				"message": strings.Join(ai_response, ""),
+			})
 			return
 		}
 
@@ -77,14 +88,8 @@ func GetFinancialHandler(c *gin.Context) {
 
 		ai_response = append(ai_response, response.Choices[0].Delta.Content)
 
-		c.JSON(http.StatusOK, gin.H{
-			"message": strings.Join(ai_response, ""),
-		})
 		fmt.Printf(response.Choices[0].Delta.Content)
 	}
-
-
-
 
 	// response, err := client.CreateChatCompletion(
 	// 	context.Background(),
