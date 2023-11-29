@@ -22,7 +22,7 @@ func HomeHandler(c *gin.Context) {
 	c.String(200, "Success")
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Welcome home",
+		"message": "Welcome home buddy",
 	})
 }
 
